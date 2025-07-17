@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Ma trận đối xứng & Dạng toàn phương (2 hoặc 3 biến)</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; background: #f7fafc; color: #222; }
+    .container { max-width: 1100px; margin: 40px auto; padding: 30px; background: #fff; border-radius: 18px; box-shadow: 0 8px 32px rgba(0,0,0,0.07); display: flex; gap: 42px; }
+    .block { flex: 1; min-width: 360px; }
+    h2 { margin-top: 0; }
+    .mat-row { display: flex; margin-bottom: 3px; }
+    .mat-cell { margin-right: 3px; }
+    input[type=number] { width: 60px; font-size: 1.1em; padding: 3px; border-radius: 6px; border: 1px solid #ccc; text-align: center; }
+    select, button { padding: 5px 14px; border-radius: 6px; font-size: 1.08em; }
+    .output, .mat-out { background: #f3f6fa; padding: 15px; border-radius: 10px; margin-top: 22px; font-size: 1.14em; }
+    .mat-label { font-weight: bold; margin-bottom: 12px; }
+    table { border-collapse: collapse; }
+    td { border: 1px solid #aaa; padding: 7px 12px; font-size: 1.13em; }
+    .subtitle { font-size: 1.08em; color: #666; margin-bottom: 8px; }
+    .guide { font-size: 0.98em; color: #444; margin-top: 36px; border-top: 1px solid #e3e3e3; padding-top: 16px; line-height: 1.6; }
+    @media (max-width: 900px) { .container { flex-direction: column; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Bên trái: Nhập ma trận xuất toàn phương -->
+    <div class="block">
+      <h2>Nhập Ma Trận Đối Xứng<br><span class="subtitle">→ Xuất dạng toàn phương</span></h2>
+      <div>
+        <label><strong>Cỡ ma trận:</strong></label>
+        <select id="matrix-size" onchange="onSizeChange()">
+          <option value="2" selected>2 × 2</option>
+          <option value="3">3 × 3</option>
+        </select>
+      </div>
+      <div id="matrix-inputs" style="margin:18px 0;"></div>
+      <button onclick="generateQuadraticForm()">Xuất dạng toàn phương</button>
+      <div id="output" class="output"></div>
+    </div>
+    <!-- Bên phải: Nhập toàn phương xuất ma trận -->
+    <div class="block">
+      <h2>Nhập Dạng Toàn Phương<br><span class="subtitle">→ Xuất ma trận đối xứng</span></h2>
+      <div id="qf-coef-form-block"></div>
+      <button onclick="quadraticFormToMatrix()">Xuất ma trận đối xứng</button>
+      <div id="mat-output" class="mat-out"></div>
+    </div>
+  </div>
+
+  <div class="guide">
+    <strong>HƯỚNG DẪN SỬ DỤNG</strong><br>
+    <ul>
+      <li><b>1.</b> <b>Chọn cỡ ma trận</b> (2×2 hoặc 3×3) ở bên trái. Số biến ở cả hai bên sẽ tự động giống nhau.</li>
+      <li><b>2.</b> <b>Bên trái:</b> Nhập nửa trên (hoặc trên đường chéo) ma trận đối xứng; phần dưới sẽ tự động điền đối xứng.</li>
+      <li><b>3.</b> <b>Bên phải:</b> Nhập hệ số cho dạng toàn phương đầy đủ (các biến và các hạng tử tuyến tính, hằng số, nếu có).</li>
+      <li><b>4.</b> Nhấn nút để chuyển đổi giữa ma trận đối xứng và dạng toàn phương. <b>Kết quả ở hai bên luôn đồng nhất về số biến và cùng ý nghĩa toán học.</b></li>
+      <li><b>5.</b> Nếu muốn kiểm tra ngược, hãy copy kết quả một bên và dán vào nhập liệu của bên còn lại!</li>
+    </ul>
+    <span style="color:#888">Ứng dụng này đồng bộ số biến ở cả hai phía để đảm bảo không còn sự khác biệt giữa hai cách nhập và xuất kết quả.</span>
+  </div>
+
+<script>
+let size = 2;
+let matrix = [[0,0],[0,0]];
+const varnames = [
+  ["x₁", "x₂"],
+  ["x₁", "x₂", "x₃"]
+];
+
+// ------- ĐỒNG BỘ CỠ GIỮA HAI BÊN ---------
+function onSizeChange() {
+  size = parseInt(document.getElementById("matrix-size").value);
+  buildMatrixInputs();
+  buildQuadraticCoefForm();
+  document.getElementById("output").innerHTML = "";
+  document.getElementById("mat-output").innerHTML = "";
+}
+
+// ----------- MA TRẬN ĐỐI XỨNG → TOÀN PHƯƠNG -----------
+function buildMatrixInputs() {
+  matrix = Array.from({length: size}, () => Array(size).fill(0));
+  let html = `<div class="mat-label">Nhập các phần tử cho ma trận đối xứng ${size} × ${size}:</div>`;
+  for (let i=0; i<size; i++) {
+    html += `<div class="mat-row">`;
+    for (let j=0; j<size; j++) {
+      if (j >= i) {
+        html += `<span class="mat-cell"><input type="number" step="any" id="m_${i}_${j}" value="0"
+        oninput="updateSymmetric(${i},${j})"></span>`;
+      } else {
+        html += `<span class="mat-cell"><input type="number" step="any" id="m_${i}_${j}" value="0" disabled style="background:#eee;"></span>`;
+      }
+    }
+    html += `</div>`;
+  }
+  document.getElementById("matrix-inputs").innerHTML = html;
+  for (let i=0; i<size; i++)
+    for (let j=0; j<size; j++)
+      matrix[i][j] = 0;
+}
+
+function updateSymmetric(i, j) {
+  let val = parseFloat(document.getElementById(`m_${i}_${j}`).value) || 0;
+  matrix[i][j] = val;
+  matrix[j][i] = val;
+  if (i !== j) {
+    document.getElementById(`m_${j}_${i}`).value = val;
+  }
+}
+
+function generateQuadraticForm() {
+  for (let i=0; i<size; i++)
+    for (let j=i; j<size; j++) {
+      let val = parseFloat(document.getElementById(`m_${i}_${j}`).value) || 0;
+      matrix[i][j] = val;
+      matrix[j][i] = val;
+    }
+  let terms = [];
+  let vars = varnames[size-2];
+  for (let i=0; i<size; i++) {
+    for (let j=i; j<size; j++) {
+      let coef = matrix[i][j];
+      if (coef === 0) continue;
+      let v1 = vars[i];
+      let v2 = vars[j];
+      if (i === j) {
+        terms.push((coef === 1 ? "" : coef === -1 ? "-" : coef) + v1 + "<sup>2</sup>");
+      } else {
+        let showCoef = coef*2;
+        terms.push((showCoef === 1 ? "" : showCoef === -1 ? "-" : showCoef) + v1 + v2);
+      }
+    }
+  }
+  let formula = terms.length > 0 ? terms.join(" + ").replace(/\+\s-\s/g, "- ") : "0";
+  document.getElementById("output").innerHTML =
+    `<strong>Dạng toàn phương:</strong><br><span style="font-size:1.13em">${formula}</span>`;
+}
+
+// ----------- TOÀN PHƯƠNG → MA TRẬN ĐỐI XỨNG -----------
+function buildQuadraticCoefForm() {
+  let html = `<div class="mat-label" style="margin-bottom:8px;">Nhập hệ số cho dạng:`;
+  if (size === 2) {
+    html += `<br> <span style="font-family:serif;">a x₁² + 2b x₁x₂ + c x₂² + 2d x₁ + 2e x₂ + f</span></div>
+      <div style="margin-bottom: 7px;">
+        <label>a </label><input type="number" step="any" id="qa" value="0"> &nbsp;
+        <label>2b </label><input type="number" step="any" id="qb" value="0"> &nbsp;
+        <label>c </label><input type="number" step="any" id="qc" value="0">
+      </div>
+      <div style="margin-bottom: 7px;">
+        <label>2d </label><input type="number" step="any" id="qd" value="0"> &nbsp;
+        <label>2e </label><input type="number" step="any" id="qe" value="0"> &nbsp;
+        <label>f </label><input type="number" step="any" id="qf" value="0">
+      </div>`;
+  } else if (size === 3) {
+    html += `<br> <span style="font-family:serif;">
+      a x₁² + 2b x₁x₂ + 2c x₁x₃ + d x₂² + 2e x₂x₃ + f x₃² 
+      + 2g x₁ + 2h x₂ + 2k x₃ + m
+      </span></div>
+      <div style="margin-bottom: 7px;">
+        <label>a </label><input type="number" step="any" id="qa" value="0">&nbsp;
+        <label>2b </label><input type="number" step="any" id="qb" value="0">&nbsp;
+        <label>2c </label><input type="number" step="any" id="qc" value="0">
+      </div>
+      <div style="margin-bottom: 7px;">
+        <label>d </label><input type="number" step="any" id="qd" value="0">&nbsp;
+        <label>2e </label><input type="number" step="any" id="qe" value="0">&nbsp;
+        <label>f </label><input type="number" step="any" id="qf" value="0">
+      </div>
+      <div style="margin-bottom: 7px;">
+        <label>2g </label><input type="number" step="any" id="qg" value="0">&nbsp;
+        <label>2h </label><input type="number" step="any" id="qh" value="0">&nbsp;
+        <label>2k </label><input type="number" step="any" id="qk" value="0">&nbsp;
+        <label>m </label><input type="number" step="any" id="qm" value="0">
+      </div>`;
+  }
+  document.getElementById("qf-coef-form-block").innerHTML = html;
+}
+
+function quadraticFormToMatrix() {
+  let html = `<strong>Ma trận đối xứng đại diện:</strong><br><table>`;
+  if (size === 2) {
+    let a = parseFloat(document.getElementById('qa').value)||0;
+    let b = parseFloat(document.getElementById('qb').value)||0;
+    let c = parseFloat(document.getElementById('qc').value)||0;
+    let d = parseFloat(document.getElementById('qd').value)||0;
+    let e = parseFloat(document.getElementById('qe').value)||0;
+    let f = parseFloat(document.getElementById('qf').value)||0;
+    let M = [
+      [a, b, d],
+      [b, c, e],
+      [d, e, f]
+    ];
+    for(let i=0;i<3;i++){
+      html += `<tr>`;
+      for(let j=0;j<3;j++) html += `<td>${M[i][j]}</td>`;
+      html += `</tr>`;
+    }
+  } else if (size === 3) {
+    let a = parseFloat(document.getElementById('qa').value)||0;
+    let b = parseFloat(document.getElementById('qb').value)||0;
+    let c = parseFloat(document.getElementById('qc').value)||0;
+    let d = parseFloat(document.getElementById('qd').value)||0;
+    let e = parseFloat(document.getElementById('qe').value)||0;
+    let f = parseFloat(document.getElementById('qf').value)||0;
+    let g = parseFloat(document.getElementById('qg').value)||0;
+    let h = parseFloat(document.getElementById('qh').value)||0;
+    let k = parseFloat(document.getElementById('qk').value)||0;
+    let m = parseFloat(document.getElementById('qm').value)||0;
+    // Ma trận đồng nhất hóa 4x4
+    let M = [
+      [a, b, c, g],
+      [b, d, e, h],
+      [c, e, f, k],
+      [g, h, k, m]
+    ];
+    for(let i=0;i<4;i++){
+      html += `<tr>`;
+      for(let j=0;j<4;j++) html += `<td>${M[i][j]}</td>`;
+      html += `</tr>`;
+    }
+  }
+  html += `</table>`;
+  document.getElementById('mat-output').innerHTML = html;
+}
+
+// Khởi tạo lần đầu
+buildMatrixInputs();
+buildQuadraticCoefForm();
+</script>
+</body>
+</html>
