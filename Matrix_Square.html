@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minh họa Phép biến đổi Tuyến tính</title>
+    <!-- Nạp thư viện MathJax -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            display: flex;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        #container {
+            display: flex;
+            width: 100%;
+        }
+        #controls {
+            flex: 1;
+            padding: 20px;
+            background-color: #fff;
+            border-right: 2px solid #ddd;
+            overflow-y: auto;
+            min-width: 450px;
+        }
+        #display {
+            flex: 2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        canvas {
+            border: 1px solid #aaa;
+            background-color: #fff;
+        }
+        .control-group {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .slider-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .slider-container label {
+            width: 150px;
+            font-size: 0.9em;
+        }
+        .slider-container input[type="range"] {
+            flex-grow: 1;
+            margin: 0 10px;
+        }
+        .slider-container .value-display {
+            width: 50px;
+            font-weight: bold;
+            text-align: right;
+        }
+        #matrix-container { /* Đổi tên để rõ ràng hơn */
+            font-size: 1.5em;
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f0f8ff;
+            border-radius: 8px;
+            min-height: 70px; 
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            font-size: 1em;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        h3 {
+            color: #0056b3;
+            border-left: 4px solid #007bff;
+            padding-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="controls">
+            <h2>Bảng điều khiển</h2>
+            <!-- Container chỉ để chứa công thức MathJax -->
+            <div id="matrix-container"></div>
+
+            <div class="control-group">
+                <h3>Điều khiển Phần tử Riêng lẻ</h3>
+                <div class="slider-container">
+                    <label for="a11Slider">a11:</label>
+                    <input type="range" id="a11Slider" min="-2" max="2" value="1" step="0.05">
+                    <span class="value-display" id="a11Display">1.00</span>
+                </div>
+                <div class="slider-container">
+                    <label for="a12Slider">a12:</label>
+                    <input type="range" id="a12Slider" min="-2" max="2" value="0" step="0.05">
+                    <span class="value-display" id="a12Display">0.00</span>
+                </div>
+                <div class="slider-container">
+                    <label for="a21Slider">a21:</label>
+                    <input type="range" id="a21Slider" min="-2" max="2" value="0" step="0.05">
+                    <span class="value-display" id="a21Display">0.00</span>
+                </div>
+                <div class="slider-container">
+                    <label for="a22Slider">a22:</label>
+                    <input type="range" id="a22Slider" min="-2" max="2" value="1" step="0.05">
+                    <span class="value-display" id="a22Display">1.00</span>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <h3>Điều khiển Nhóm (Tăng/Giảm)</h3>
+                <div class="slider-container">
+                    <label for="row1Slider">Hàng 1 (a11, a12)</label>
+                    <input type="range" id="row1Slider" min="-1" max="1" value="0" step="0.05">
+                </div>
+                <div class="slider-container">
+                    <label for="row2Slider">Hàng 2 (a21, a22)</label>
+                    <input type="range" id="row2Slider" min="-1" max="1" value="0" step="0.05">
+                </div>
+                <div class="slider-container">
+                    <label for="col1Slider">Cột 1 (a11, a21)</label>
+                    <input type="range" id="col1Slider" min="-1" max="1" value="0" step="0.05">
+                </div>
+                <div class="slider-container">
+                    <label for="col2Slider">Cột 2 (a12, a22)</label>
+                    <input type="range" id="col2Slider" min="-1" max="1" value="0" step="0.05">
+                </div>
+                <div class="slider-container">
+                    <label for="diag1Slider">Chéo chính (a11, a22)</label>
+                    <input type="range" id="diag1Slider" min="-1" max="1" value="0" step="0.05">
+                </div>
+                <div class="slider-container">
+                    <label for="diag2Slider">Chéo phụ (a12, a21)</label>
+                    <input type="range" id="diag2Slider" min="-1" max="1" value="0" step="0.05">
+                </div>
+            </div>
+
+            <button id="randomBtn">Tạo ma trận ngẫu nhiên</button>
+        </div>
+        <div id="display">
+            <canvas id="transformCanvas" width="700" height="700"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('transformCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // --- DOM Elements ---
+        const sliders = {
+            a11: document.getElementById('a11Slider'), a12: document.getElementById('a12Slider'),
+            a21: document.getElementById('a21Slider'), a22: document.getElementById('a22Slider'),
+        };
+        const groupSliders = {
+            row1: document.getElementById('row1Slider'), row2: document.getElementById('row2Slider'),
+            col1: document.getElementById('col1Slider'), col2: document.getElementById('col2Slider'),
+            diag1: document.getElementById('diag1Slider'), diag2: document.getElementById('diag2Slider'),
+        };
+        const displays = {
+            a11: document.getElementById('a11Display'), a12: document.getElementById('a12Display'),
+            a21: document.getElementById('a21Display'), a22: document.getElementById('a22Display'),
+        };
+        const matrixContainer = document.getElementById('matrix-container');
+        const randomBtn = document.getElementById('randomBtn');
+        
+        // --- State and Constants ---
+        const NUM_POINTS = 300000;
+        const sourcePoints = [];
+        let lastGroupValues = {};
+
+        // --- Functions ---
+        function generateSourcePoints() {
+            for (let i = 0; i < NUM_POINTS; i++) {
+                sourcePoints.push({ x: Math.random(), y: Math.random() });
+            }
+        }
+
+        function drawGridAndAxes(scale, offsetX, offsetY) {
+            ctx.strokeStyle = '#e0e0e0'; ctx.lineWidth = 1;
+            for (let i = -10; i <= 10; i++) {
+                ctx.beginPath(); ctx.moveTo(offsetX + i * scale, 0); ctx.lineTo(offsetX + i * scale, canvas.height); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0, offsetY + i * scale); ctx.lineTo(canvas.width, offsetY + i * scale); ctx.stroke();
+            }
+            ctx.strokeStyle = '#888'; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(0, offsetY); ctx.lineTo(canvas.width, offsetY); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(offsetX, 0); ctx.lineTo(offsetX, canvas.height); ctx.stroke();
+        }
+
+        function drawScene() {
+            const a11 = parseFloat(sliders.a11.value); const a12 = parseFloat(sliders.a12.value);
+            const a21 = parseFloat(sliders.a21.value); const a22 = parseFloat(sliders.a22.value);
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const scale = 150; const offsetX = canvas.width / 2; const offsetY = canvas.height / 2;
+            drawGridAndAxes(scale, offsetX, offsetY);
+
+            ctx.fillStyle = 'rgba(144, 238, 144, 0.6)';
+            for (const p of sourcePoints) {
+                ctx.fillRect(p.x * scale + offsetX, -p.y * scale + offsetY, 1, 1);
+            }
+            ctx.fillStyle = 'rgba(220, 20, 60, 0.8)';
+            for (const p of sourcePoints) {
+                const newX = a11 * p.x + a12 * p.y;
+                const newY = a21 * p.x + a22 * p.y;
+                ctx.fillRect(newX * scale + offsetX, -newY * scale + offsetY, 2, 2);
+            }
+        }
+
+        function updateMatrixDisplay() {
+            const a11 = parseFloat(sliders.a11.value).toFixed(2);
+            const a12 = parseFloat(sliders.a12.value).toFixed(2);
+            const a21 = parseFloat(sliders.a21.value).toFixed(2);
+            const a22 = parseFloat(sliders.a22.value).toFixed(2);
+            
+            const latex = `$$ A = \\begin{bmatrix} ${a11} & ${a12} \\\\ ${a21} & ${a22} \\end{bmatrix} $$`;
+            matrixContainer.textContent = latex;
+            if (window.MathJax && MathJax.typesetPromise) {
+                MathJax.typesetPromise([matrixContainer]).catch(err => console.error('MathJax error:', err));
+            }
+        }
+        
+        function updateAllUI() {
+            for (const key in sliders) {
+                displays[key].textContent = parseFloat(sliders[key].value).toFixed(2);
+            }
+            updateMatrixDisplay();
+        }
+
+        // --- Event Listeners Setup ---
+        function setupListeners() {
+            for (const key in sliders) {
+                sliders[key].addEventListener('input', () => {
+                    updateAllUI();
+                    drawScene();
+                });
+            }
+
+            const groupMappings = {
+                row1: ['a11', 'a12'], row2: ['a21', 'a22'],
+                col1: ['a11', 'a21'], col2: ['a12', 'a22'],
+                diag1: ['a11', 'a22'], diag2: ['a12', 'a21'],
+            };
+
+            for (const groupKey in groupSliders) {
+                const groupSlider = groupSliders[groupKey];
+                lastGroupValues[groupKey] = 0;
+
+                groupSlider.addEventListener('input', () => {
+                    const currentValue = parseFloat(groupSlider.value);
+                    const delta = currentValue - lastGroupValues[groupKey];
+                    lastGroupValues[groupKey] = currentValue;
+
+                    const keysToAffect = groupMappings[groupKey];
+                    keysToAffect.forEach(key => {
+                        const individualSlider = sliders[key];
+                        let newValue = parseFloat(individualSlider.value) + delta;
+                        newValue = Math.max(parseFloat(individualSlider.min), Math.min(parseFloat(individualSlider.max), newValue));
+                        individualSlider.value = newValue;
+                    });
+                    
+                    updateAllUI();
+                    drawScene();
+                });
+
+                groupSlider.addEventListener('change', () => {
+                    groupSlider.value = 0;
+                    lastGroupValues[groupKey] = 0;
+                });
+            }
+
+            randomBtn.addEventListener('click', () => {
+                for (const key in sliders) {
+                    sliders[key].value = (Math.random() * 3 - 1.5).toFixed(2);
+                }
+                updateAllUI();
+                drawScene();
+            });
+        }
+
+        // --- Initialization ---
+        generateSourcePoints();
+        setupListeners();
+        updateAllUI();
+        drawScene();
+    </script>
+</body>
+</html>
