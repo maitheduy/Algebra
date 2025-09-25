@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trắc nghiệm Tính Định thức</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-dark: #1d4ed8;
+            --success-color: #10b981;
+            --error-color: #ef4444;
+            --light-bg: #f8fafc;
+            --white: #ffffff;
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            --border-color: #e2e8f0;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: var(--text-dark);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .quiz-container {
+            background-color: var(--white);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 800px;
+            padding: 40px;
+            transition: transform 0.3s ease;
+        }
+        
+        .quiz-container:hover {
+            transform: translateY(-5px);
+        }
+        
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+            font-size: 2.2rem;
+            position: relative;
+            padding-bottom: 15px;
+        }
+        
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(to right, var(--primary-color), var(--success-color));
+            border-radius: 2px;
+        }
+        
+        .question-block {
+            margin-bottom: 30px;
+            padding: 25px;
+            border-radius: 12px;
+            background-color: var(--light-bg);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .question-block.active {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .question-text {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+        }
+        
+        .options-container {
+            display: grid;
+            gap: 12px;
+        }
+        
+        .option {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background-color: var(--white);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .option:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .option.selected {
+            border-color: var(--primary-color);
+            background-color: rgba(37, 99, 235, 0.05);
+        }
+        
+        .option input[type="radio"] {
+            margin-right: 12px;
+            transform: scale(1.2);
+        }
+        
+        .option-label {
+            font-weight: 500;
+        }
+        
+        .buttons-container {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        button {
+            padding: 15px 25px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #submit-btn {
+            background-color: var(--primary-color);
+            color: var(--white);
+        }
+        
+        #submit-btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(37, 99, 235, 0.2);
+        }
+        
+        #reset-btn {
+            background-color: var(--light-bg);
+            color: var(--text-dark);
+            border: 2px solid var(--border-color);
+        }
+        
+        #reset-btn:hover {
+            background-color: #e2e8f0;
+            transform: translateY(-2px);
+        }
+        
+        #results {
+            margin-top: 30px;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: bold;
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .correct {
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            color: #065f46;
+            border: 2px solid #10b981;
+        }
+        
+        .incorrect {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            color: #991b1b;
+            border: 2px solid #ef4444;
+        }
+        
+        .result-details {
+            margin-top: 20px;
+            text-align: left;
+            background-color: var(--white);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .result-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .result-item.correct {
+            background-color: #f0fdf4;
+            color: #166534;
+        }
+        
+        .result-item.incorrect {
+            background-color: #fef2f2;
+            color: #991b1b;
+        }
+        
+        .result-icon {
+            font-size: 1.5rem;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background-color: var(--border-color);
+            border-radius: 4px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            background: linear-gradient(to right, var(--primary-color), var(--success-color));
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @media (max-width: 768px) {
+            .quiz-container {
+                padding: 25px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .question-block {
+                padding: 20px;
+            }
+            
+            .buttons-container {
+                flex-direction: column;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .quiz-container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .question-text {
+                font-size: 1.1rem;
+            }
+            
+            button {
+                padding: 12px 20px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="quiz-container">
+        <h1>Trắc nghiệm Vui: Định thức Ma trận</h1>
+        
+        <div class="progress-bar">
+            <div class="progress" id="progress-bar"></div>
+        </div>
+        
+        <div id="quiz-form">
+            <!-- Các câu hỏi sẽ được tạo ra bằng JavaScript -->
+        </div>
+        
+        <div class="buttons-container">
+            <button id="submit-btn">Kiểm tra kết quả</button>
+            <button id="reset-btn">Làm lại</button>
+        </div>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        // Dữ liệu câu hỏi
+        const quizData = [
+            {
+                question: "Câu 1: Cho ma trận vuông A cấp 3x3 có det(A) = 12. Nếu ma trận B được tạo ra bằng cách đổi chỗ hàng 1 và hàng 3 của A, thì det(B) bằng bao nhiêu?",
+                options: ["12", "-12", "0", "1/12"],
+                answer: "-12",
+                explanation: "Khi đổi chỗ hai hàng của ma trận, định thức đổi dấu."
+            },
+            {
+                question: "Câu 2: Cho ma trận vuông A cấp 4x4 có det(A) = 5. Nếu ma trận B được tạo ra bằng cách nhân hàng thứ 2 của A với số 3, thì det(B) bằng bao nhiêu?",
+                options: ["5", "15", "405", "8"],
+                answer: "15",
+                explanation: "Khi nhân một hàng của ma trận với số k, định thức cũng được nhân với k."
+            },
+            {
+                question: "Câu 3: Cho ma trận vuông A cấp 3x3 có det(A) = 4. Tính định thức của ma trận B = 2A.",
+                options: ["8", "16", "32", "4"],
+                answer: "32",
+                explanation: "Với ma trận cấp n, det(kA) = kⁿ * det(A). Ở đây n=3 nên det(2A) = 2³ * 4 = 32."
+            },
+            {
+                question: "Câu 4: Cho ma trận khả nghịch A cấp 5x5 có det(A) = -2. Tính định thức của ma trận chuyển vị của ma trận nghịch đảo, det((A⁻¹)ᵀ).",
+                options: ["-2", "2", "1/2", "-1/2"],
+                answer: "-1/2",
+                explanation: "det(A⁻¹) = 1/det(A) = -1/2 và det(Mᵀ) = det(M) với mọi ma trận vuông M."
+            },
+            {
+                question: "Câu 5: Cho ma trận A cấp 4x4 có det(A) = 10. Ta tạo ma trận B bằng cách: đổi chỗ hàng 1 và 2, sau đó cộng 5 lần hàng 3 vào hàng 1. Hỏi det(B) bằng bao nhiêu?",
+                options: ["10", "-10", "50", "-50"],
+                answer: "-10",
+                explanation: "Đổi chỗ hai hàng làm định thức đổi dấu, cộng bội của một hàng vào hàng khác không làm thay đổi định thức."
+            }
+        ];
+
+        const quizForm = document.getElementById('quiz-form');
+        const submitBtn = document.getElementById('submit-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const resultsContainer = document.getElementById('results');
+        const progressBar = document.getElementById('progress-bar');
+
+        let userAnswers = new Array(quizData.length).fill(null);
+        let quizCompleted = false;
+
+        // Hàm tạo các câu hỏi và lựa chọn
+        function generateQuiz() {
+            quizData.forEach((data, index) => {
+                const questionBlock = document.createElement('div');
+                questionBlock.className = 'question-block';
+                questionBlock.id = `question-${index}`;
+
+                const questionText = document.createElement('p');
+                questionText.className = 'question-text';
+                questionText.innerText = data.question;
+                questionBlock.appendChild(questionText);
+
+                const optionsContainer = document.createElement('div');
+                optionsContainer.className = 'options-container';
+
+                data.options.forEach(option => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.className = 'option';
+                    
+                    const radio = document.createElement('input');
+                    radio.type = 'radio';
+                    radio.name = `question${index}`;
+                    radio.value = option;
+                    radio.id = `q${index}-${option}`;
+                    
+                    radio.addEventListener('change', function() {
+                        if (this.checked) {
+                            userAnswers[index] = option;
+                            updateProgress();
+                            
+                            // Thêm hiệu ứng cho option được chọn
+                            const options = questionBlock.querySelectorAll('.option');
+                            options.forEach(opt => opt.classList.remove('selected'));
+                            optionDiv.classList.add('selected');
+                            
+                            // Thêm hiệu ứng active cho câu hỏi
+                            questionBlock.classList.add('active');
+                            setTimeout(() => {
+                                questionBlock.classList.remove('active');
+                            }, 1000);
+                        }
+                    });
+                    
+                    const label = document.createElement('label');
+                    label.className = 'option-label';
+                    label.htmlFor = `q${index}-${option}`;
+                    label.innerText = option;
+                    
+                    optionDiv.appendChild(radio);
+                    optionDiv.appendChild(label);
+                    optionsContainer.appendChild(optionDiv);
+                });
+
+                questionBlock.appendChild(optionsContainer);
+                quizForm.appendChild(questionBlock);
+            });
+            
+            updateProgress();
+        }
+
+        // Hàm cập nhật thanh tiến trình
+        function updateProgress() {
+            const answeredCount = userAnswers.filter(answer => answer !== null).length;
+            const progressPercentage = (answeredCount / quizData.length) * 100;
+            progressBar.style.width = `${progressPercentage}%`;
+        }
+
+        // Hàm tính điểm và hiển thị kết quả
+        function showResults() {
+            if (userAnswers.some(answer => answer === null)) {
+                alert("Vui lòng trả lời tất cả các câu hỏi trước khi kiểm tra kết quả!");
+                return;
+            }
+            
+            let score = 0;
+            let resultsHTML = '';
+            
+            quizData.forEach((data, index) => {
+                const isCorrect = userAnswers[index] === data.answer;
+                if (isCorrect) score++;
+                
+                resultsHTML += `
+                    <div class="result-item ${isCorrect ? 'correct' : 'incorrect'}">
+                        <div>
+                            <strong>Câu ${index + 1}:</strong> ${userAnswers[index]} 
+                            ${isCorrect ? '✓' : '✗'} 
+                            ${!isCorrect ? `(Đáp án đúng: ${data.answer})` : ''}
+                        </div>
+                        <span class="result-icon">${isCorrect ? '✅' : '❌'}</span>
+                    </div>
+                    ${!isCorrect ? `<div style="text-align: left; margin-bottom: 15px; font-style: italic; color: var(--text-light);">${data.explanation}</div>` : ''}
+                `;
+            });
+            
+            const percentage = Math.round((score / quizData.length) * 100);
+            let resultMessage = '';
+            
+            if (percentage >= 80) {
+                resultMessage = `Chúc mừng! Bạn đã trả lời đúng ${score}/${quizData.length} câu (${percentage}%) - Xuất sắc!`;
+            } else if (percentage >= 60) {
+                resultMessage = `Khá tốt! Bạn đã trả lời đúng ${score}/${quizData.length} câu (${percentage}%) - Tiếp tục phát huy!`;
+            } else {
+                resultMessage = `Cần cố gắng hơn! Bạn đã trả lời đúng ${score}/${quizData.length} câu (${percentage}%) - Hãy ôn tập lại kiến thức!`;
+            }
+            
+            resultsContainer.innerHTML = `
+                <div class="${percentage >= 60 ? 'correct' : 'incorrect'}">
+                    ${resultMessage}
+                </div>
+                <div class="result-details">
+                    <h3>Chi tiết kết quả:</h3>
+                    ${resultsHTML}
+                </div>
+            `;
+            
+            resultsContainer.style.display = 'block';
+            quizCompleted = true;
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = '0.7';
+            submitBtn.style.cursor = 'not-allowed';
+            
+            // Cuộn đến kết quả
+            resultsContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Hàm reset bài trắc nghiệm
+        function resetQuiz() {
+            userAnswers = new Array(quizData.length).fill(null);
+            const radioButtons = document.querySelectorAll('input[type="radio"]');
+            radioButtons.forEach(radio => {
+                radio.checked = false;
+            });
+            
+            const options = document.querySelectorAll('.option');
+            options.forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            resultsContainer.style.display = 'none';
+            quizCompleted = false;
+            submitBtn.disabled = false;
+            submitBtn.style.opacity = '1';
+            submitBtn.style.cursor = 'pointer';
+            
+            updateProgress();
+            
+            // Cuộn lên đầu trang
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Chạy hàm tạo câu hỏi khi trang được tải
+        window.onload = generateQuiz;
+
+        // Gán sự kiện click cho nút kiểm tra
+        submitBtn.addEventListener('click', showResults);
+        
+        // Gán sự kiện click cho nút làm lại
+        resetBtn.addEventListener('click', resetQuiz);
+
+    </script>
+
+</body>
+</html>
